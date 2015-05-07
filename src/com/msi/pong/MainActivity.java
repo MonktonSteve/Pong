@@ -1,20 +1,16 @@
 package com.msi.pong;
 
 import android.app.Activity;
-
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends Activity {
-
-	GLSurfaceView mGLView;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//setContentView(new MyPanel(this));
+		//getActionBar().setTitle("pong again");
 		setContentView(new MyPanel(this));
 	}
 
