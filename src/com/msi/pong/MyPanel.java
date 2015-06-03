@@ -1,6 +1,8 @@
 package com.msi.pong;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,6 +11,8 @@ import android.graphics.Paint.Align;
 import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -24,7 +28,11 @@ public class MyPanel extends View {
 	Paint circlePaint = new Paint();
 	Paint linePaint = new Paint();
 	Paint backPaint = new Paint();
+	MediaPlayer mp1, mp2;
 	boolean boomed;
+	boolean yesno = false;
+	boolean play_again = true;
+	Context _context;
 	   
 	// For touch inputs - previous touch (x, y)
 	private float previousX;
@@ -32,13 +40,27 @@ public class MyPanel extends View {
 	   
     public MyPanel(Context context) {
         super(context);
+        _context = context;
     	backPaint.setColor(Color.BLUE);
     	bullsEyePaint.setColor(Color.BLACK);
     	bullsEyePaint.setStrokeWidth(3);
     	circlePaint.setStyle(Paint.Style.FILL);
     	linePaint.setStyle(Paint.Style.FILL);
+
+		mp1 = MediaPlayer.create(context, R.raw.lock);
+		mp1.setLooping(false);
+		//mp2 = MediaPlayer.create(context, R.raw.neon);
     }
     
+    private void _init() {
+        ballX = w/2;
+        ballY = h/2;
+        lineX = (w/2);
+        ballSpeedX = -2;
+        ballSpeedY = -3;
+        bullsEyeAngle = 0;
+    	boomed = false;
+    }
     @Override 
     public void onSizeChanged(int _w, int _h, int _oldw, int _oldh) {
         w = _w;
@@ -68,12 +90,17 @@ public class MyPanel extends View {
 
     @Override
     public void onDraw(Canvas canvas) {
-    	if (boomed == false) {
-    		updateGame(canvas);
-    	} else {
-    		showScore(canvas);
+    	if (yesno == false) {
+    		if (boomed == false) {
+    			updateGame(canvas);
+        		invalidate();
+        	} else {
+    			showScore(canvas);
+        	}
     	}
-    	invalidate();
+    	if (play_again == false) {
+    		System.exit(1);
+    	}
     }
     
     private void updateGame(Canvas canvas) {
@@ -162,6 +189,7 @@ public class MyPanel extends View {
              ballSpeedY = -ballSpeedY;
              ballY = (yMax-(20+lineHeighth)) - ballRadius;
              score += 1;
+             mp1.start();
        } else if (ballY + ballRadius > yMax) {
     	   boom(canvas);
        } else if (ballY - ballRadius < yMin) {
@@ -208,11 +236,12 @@ public class MyPanel extends View {
     	        circlePositions));
     	canvas.drawCircle(ballX, ballY, ballRadius, circlePaint);
     	boomed = true;
-    }
+	}
     
     private void showScore(Canvas canvas) {
     	Paint paint = new Paint();
     	
+		//mp2.start();
     	circlePaint.setTextSize(30f);
     	circlePaint.setAntiAlias(true);
     	circlePaint.setDither(true);
@@ -221,6 +250,32 @@ public class MyPanel extends View {
     	circlePaint.setColor(Color.CYAN);
     	String scoreText = "Your score is : " + Integer.toString(score);
     	canvas.drawText(scoreText, w/2, h/2, circlePaint);
+    	//mp2.release();
+    	yesno = true;
+    	AlertDialog.Builder builder = new AlertDialog.Builder(_context);
+    	builder.setMessage("Do you want to play again?").setPositiveButton("Yes", dialogClickListener)
+    	    .setNegativeButton("No", dialogClickListener).show();
     }
+    
+	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+	    @Override
+	    public void onClick(DialogInterface dialog, int which) {
+	        switch (which){
+	        case DialogInterface.BUTTON_POSITIVE:
+	            //Yes button clicked
+	        	play_again = true;
+	        	yesno = false;
+	    		_init();
+	        	invalidate();
+	            break;
+
+	        case DialogInterface.BUTTON_NEGATIVE:
+	            //No button clicked
+	        	play_again = false;
+	        	invalidate();
+	            break;
+	        }
+	    }
+	};
 }
 
